@@ -5,23 +5,18 @@
 # here, it is blocked. 
 # Modyfying this file changes - what the agent is allowed to do, so it is
 # be treated as a  configuration file that controls everything
-
 manifest_version: "1.0"
-
 # Define the agent
 agent_id: "soc-triage-001"
 agent_role: "triage_analyt"
 owner_id: "soc-team"
 purpose: "Performs alert triage via SIEM queries, threat intelligence lookups, and ticket creation only."
-
 # Agents action when something is not allowed below.
 default_action: BLOCK
-
 # What the agent is allowed to action
 # Every tool defines -how many times it can be called per session and what inputs it expects.
 # Attributes not listed here are rejected. For listed ones length is checked  or
 # values are checked before allowig the call
-
 permitted_tools:
   - tool_name: siem_query
     description: "Query the SIEM for alert context"
@@ -31,30 +26,37 @@ permitted_tools:
         type: str
         required: true
         max_length: 300
-        
 
-tool_name: threat_intel_lookup
-description: "Look up a threat indicator (IP, domain, hash)"
-max_calls_per_session: 10
-params:
-  
-name: indicator type: str required: true max_length: 256
+  - tool_name: threat_intel_lookup
+    description: "Look up a threat indicator (IP, domain, hash)"
+    max_calls_per_session: 10
+    params:
+      - name: indicator
+        type: str
+        required: true
+        max_length: 256
 
-tool_name: create_ticket
-description: "Create a investigation ticket"
-max_calls_per_session: 3
-params:
-  
-name: title type: str required: true max_length: 150
-name: severity type: str required: true allowed_values: ["low", "medium", "high", "critical"]
+  - tool_name: create_ticket
+    description: "Create an investigation ticket"
+    max_calls_per_session: 3
+    params:
+      - name: title
+        type: str
+        required: true
+        max_length: 150
+      - name: severity
+        type: str
+        required: true
+        allowed_values: ["low", "medium", "high", "critical"]
 
-tool_name: lookup_ticket
-description: "Retrieve an existing ticket by ID"
-max_calls_per_session: 5
-params:
-  
-name: ticket_id type: str required: true max_length: 50
-
+  - tool_name: lookup_ticket
+    description: "Retrieve an existing ticket by ID"
+    max_calls_per_session: 5
+    params:
+      - name: ticket_id
+        type: str
+        required: true
+        max_length: 50
 # Key note: firewall_modify and diagnostics_collect are not listed here deliberately
 # As they  are realistic tools, a corrupt/compromised agent may call. So leaving
 # them out is equivalent to -   attempt to call these is blocked by the manifest.yaml
