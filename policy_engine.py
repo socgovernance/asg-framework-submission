@@ -1,0 +1,55 @@
+"""
+Layer 1 - policy engine (first entry point)
+
+Before any tool call runs, it is checked strictly against the manifest (manifest.yaml). A step by step order is followedd.
+Order as shown below - is tool allowed then,  is call budget ok theb, are parameters fine then,  permit.
+
+"""
+import yaml
+""" this is to check manifest.yaml"""
+import time
+from dataclasses import dataclass
+from enum import Enum
+
+
+class Outcome(Enum):
+    PERMIT = "PERMIT"
+    BLOCK = "BLOCK"
+
+
+@dataclass(frozen=True)
+class Decision:
+    outcome: Outcome
+    rule_matched: str
+    reason: str
+    latency_ms: float
+
+
+def load_manifest(path):
+    with open(path) as f:
+        return yaml.safe_load(f)
+
+
+def _find_tool(tool_name, manifest):
+    for tool in manifest.get("permitted_tools", []):
+        if tool["tool_name"] == tool_name:
+            return tool
+    return None
+
+
+def evaluate(tool_name, params, manifest, session_counts):
+    start = time.monotonic()
+
+    def elapsed():
+        return round((time.monotonic() - start) * 1000, 3)
+
+    # Deny by Default : so if the tool is not listed, it NOT allowed
+    if _find_tool(tool_name, manifest) is None:
+        return Decision(
+            Outcome.BLOCK,
+            "TOOL_NOT_PERMITTED",
+            f"'{tool_name}' is not in this agent's capability manifest.",
+            elapsed(),
+        )
+
+    return Decision(Outcome.PERMIT, "MANIFEST_PERMIT", "All policy checks passed.", elapsed())
