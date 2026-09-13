@@ -52,4 +52,26 @@ def evaluate(tool_name, params, manifest, session_counts):
             elapsed(),
         )
 
+    tool = _find_tool(tool_name, manifest)
+    if tool is None:
+        return Decision(
+            Outcome.BLOCK,
+            "TOOL_NOT_PERMITTED",
+            f"'{tool_name}' is not in this agent's capability manifest.",
+            elapsed(),
+        )
+
+    # Each tool has a session limit, but only allowed calls count against it
+    # Blocked requests are free/not counted
+    used = session_counts.get(tool_name, 0)
+    limit = tool.get("max_calls_per_session")
+    if limit is not None and used >= limit:
+        return Decision(
+            Outcome.BLOCK,
+            "RATE_LIMIT_EXCEEDED",
+            f"'{tool_name}' has reached its session limit of {limit} calls.",
+            elapsed(),
+        )
+
+    session_counts[tool_name] = used + 1
     return Decision(Outcome.PERMIT, "MANIFEST_PERMIT", "All policy checks passed.", elapsed())
