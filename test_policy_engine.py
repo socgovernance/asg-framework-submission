@@ -48,3 +48,27 @@ def test_blocked_calls_do_not_consume_budget():
     counts = {}
     evaluate("firewall_modify", {}, MANIFEST, counts)
     assert "firewall_modify" not in counts
+    
+    """ test/s for parameter validation"""
+def test_missing_required_param_is_blocked():
+    d = evaluate("siem_query", {}, MANIFEST, {})
+    assert d.outcome is Outcome.BLOCK
+    assert d.rule_matched == "MISSING_REQUIRED_PARAM"
+
+
+def test_wrong_param_type_is_blocked():
+    d = evaluate("siem_query", {"query_string": 12345}, MANIFEST, {})
+    assert d.outcome is Outcome.BLOCK
+    assert d.rule_matched == "PARAM_TYPE_MISMATCH"
+
+
+def test_create_ticket_requires_both_params():
+    d = evaluate("create_ticket", {"title": "Suspicious login"}, MANIFEST, {})
+    assert d.outcome is Outcome.BLOCK
+    assert d.rule_matched == "MISSING_REQUIRED_PARAM"
+
+
+def test_failed_param_check_does_not_consume_budget():
+    counts = {}
+    evaluate("siem_query", {}, MANIFEST, counts)
+    assert "siem_query" not in counts
