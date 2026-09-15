@@ -55,7 +55,6 @@ def test_missing_required_param_is_blocked():
     assert d.outcome is Outcome.BLOCK
     assert d.rule_matched == "MISSING_REQUIRED_PARAM"
 
-
 def test_wrong_param_type_is_blocked():
     d = evaluate("siem_query", {"query_string": 12345}, MANIFEST, {})
     assert d.outcome is Outcome.BLOCK
@@ -72,3 +71,30 @@ def test_failed_param_check_does_not_consume_budget():
     counts = {}
     evaluate("siem_query", {}, MANIFEST, counts)
     assert "siem_query" not in counts
+    
+def test_over_length_param_is_blocked():
+    d = evaluate("siem_query", {"query_string": "x" * 301}, MANIFEST, {})
+    assert d.outcome is Outcome.BLOCK
+    assert d.rule_matched == "PARAM_TOO_LONG"
+
+
+def test_param_at_exact_max_length_is_allowed():
+    d = evaluate("siem_query", {"query_string": "x" * 300}, MANIFEST, {})
+    assert d.outcome is Outcome.PERMIT
+
+
+def test_disallowed_value_is_blocked():
+    d = evaluate("create_ticket", {"title": "Login anomaly", "severity": "urgent"},
+                 MANIFEST, {})
+    assert d.outcome is Outcome.BLOCK
+    assert d.rule_matched == "PARAM_VALUE_NOT_ALLOWED"
+
+
+def test_allowed_value_is_case_insensitive():
+    d = evaluate("create_ticket", {"title": "Login anomaly", "severity": "High"},
+                 MANIFEST, {})
+    assert d.outcome is Outcome.PERMIT
+    
+    
+    
+    

@@ -91,5 +91,26 @@ def evaluate(tool_name, params, manifest, session_counts):
                 elapsed(),
             )
         
+        
+        max_length = spec.get("max_length")
+        if max_length is not None and len(value) > max_length:
+            return Decision(
+                Outcome.BLOCK,
+                "PARAM_TOO_LONG",
+                f"'{name}' exceeds max_length of {max_length} (got {len(value)}).",
+                elapsed(),
+            )
+
+        # values are checked for  case sensitivty. manifest expecting a vlue
+        # of "high" should aslo accept "High", a difference in formatting
+        allowed = spec.get("allowed_values")
+        if allowed is not None and value.lower() not in [a.lower() for a in allowed]:
+            return Decision(
+                Outcome.BLOCK,
+                "PARAM_VALUE_NOT_ALLOWED",
+                f"'{name}' value '{value}' is not in allowed set {allowed}.",
+                elapsed(),
+            )
+        
     session_counts[tool_name] = used + 1
     return Decision(Outcome.PERMIT, "MANIFEST_PERMIT", "All policy checks passed.", elapsed())
