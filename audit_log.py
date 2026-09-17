@@ -3,12 +3,15 @@
 # Appends each decision to disk as its own JSON object per line
 # Records are append only so nothing gets modified or delete d
 # Cryptographic chaining is next -this step just is for the raw logs onto disk
-
+# Adding - each record's hash covers  its own content & the hash of the previous record
 """
 
 import json
 import uuid
+import hashlib
 from datetime import datetime, timezone
+
+GENESIS_HASH = "0" * 64
 
 
 class AuditWriter:
@@ -18,6 +21,9 @@ entry counter across multiple tool calls for the duration of the session
     """
 
     def __init__(self, path="audit.jsonl", manifest_hash="unknown", session_id=None):
+        # Because there's no item before the very first entry, we give it a fixed starting hash. This way,
+        # every record in the chain follows the exact same format from beginining 
+        self.prev_hash = GENESIS_HASH
         self.path = path
         self.manifest_hash = manifest_hash
         self.session_id = session_id or str(uuid.uuid4())
@@ -48,8 +54,21 @@ entry counter across multiple tool calls for the duration of the session
         # such as  semantic sanitizers similarity score
         if extra:
             entry["extra"] = extra
+            
+        # Format  JSON  before hashing 
+        # formatting, so identical records always yield the exact same hash
+        # Implements linear hash-chaining (Haber & Stornetta 1991) via RFC 8785 canonical JSON serialization
+        serialised = json.dumps(entry, sort_keys=True, separators=(",", ":"))
+        chain_hash = hashlib.sha256((self.prev_hash + serialised).encode()).hexdigest()
+
+        # Lets think of ths as signing a document-you can't include the signature in the words 
+        # we hash only the original data fields first, then attach prev and chain hash
+        entry["prev_hash"] = self.prev_hash
+        entry["chain_hash"] = chain_hash
 
         with open(self.path, "a") as f:
             f.write(json.dumps(entry) + "\n")
+            
+        self.prev_hash = chain_hash
 
         return entry
