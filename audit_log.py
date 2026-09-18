@@ -55,9 +55,9 @@ entry counter across multiple tool calls for the duration of the session
         if extra:
             entry["extra"] = extra
             
-        # Format  JSON  before hashing 
-        # formatting, so identical records always yield the exact same hash
-        # Implements linear hash-chaining (Haber & Stornetta 1991) via RFC 8785 canonical JSON serialization
+        # Linear hash-chaining (Haber & Stornetta, 1991) over a deterministic
+        # JSON serialisation - sorted keys and no whitespace, so the same
+        # record always produces the same digest
         serialised = json.dumps(entry, sort_keys=True, separators=(",", ":"))
         chain_hash = hashlib.sha256((self.prev_hash + serialised).encode()).hexdigest()
 
