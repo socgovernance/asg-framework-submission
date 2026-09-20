@@ -37,11 +37,22 @@ def _find_tool(tool_name, manifest):
     return None
 
 
-def evaluate(tool_name, params, manifest, session_counts):
+def evaluate(tool_name, params, manifest, session_counts, agent_id=None):
     start = time.monotonic()
 
     def elapsed():
         return round((time.monotonic() - start) * 1000, 3)
+    
+    # Identity is checked first -  a caller that cannot prove who it is
+    # has no capabilities, missing identity blocks as opposedto
+    # passing through, so a caller cannot skip the check by omitting
+    if agent_id != manifest.get("agent_id"):
+        return Decision(
+            Outcome.BLOCK,
+            "AGENT_IDENTITY_MISMATCH",
+            f"Agent '{agent_id}' does not match the manifest agent_id.",
+            elapsed(),
+        )
 
     # Deny by Default : so if the tool is not listed, it NOT allowed
     tool = _find_tool(tool_name, manifest)

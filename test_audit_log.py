@@ -12,6 +12,8 @@ from policy_engine import evaluate, load_manifest
 
 MANIFEST = load_manifest("manifest.yaml")
 
+AGENT_ID = MANIFEST["agent_id"]
+
 
 def read_entries(path):
     with open(path) as f:
@@ -21,7 +23,7 @@ def read_entries(path):
 def test_permit_is_written(tmp_path):
     log = tmp_path / "audit.jsonl"
     w = AuditWriter(path=str(log))
-    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {})
+    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {}, AGENT_ID)
     w.append("siem_query", {"query_string": "x"}, d)
 
     entries = read_entries(log)
@@ -33,7 +35,7 @@ def test_permit_is_written(tmp_path):
 def test_block_records_the_rule(tmp_path):
     log = tmp_path / "audit.jsonl"
     w = AuditWriter(path=str(log))
-    d = evaluate("diagnostics_collect", {}, MANIFEST, {})
+    d = evaluate("diagnostics_collect", {}, MANIFEST, {}, AGENT_ID)
     w.append("diagnostics_collect", {}, d)
 
     assert read_entries(log)[0]["rule_matched"] == "TOOL_NOT_PERMITTED"
@@ -44,7 +46,7 @@ def test_entries_are_numbered_in_order(tmp_path):
     w = AuditWriter(path=str(log))
     counts = {}
     for _ in range(3):
-        d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, counts)
+        d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, counts, AGENT_ID)
         w.append("siem_query", {"query_string": "x"}, d)
 
     assert [e["entry_number"] for e in read_entries(log)] == [1, 2, 3]
@@ -53,7 +55,7 @@ def test_entries_are_numbered_in_order(tmp_path):
 def test_extra_fields_are_attached(tmp_path):
     log = tmp_path / "audit.jsonl"
     w = AuditWriter(path=str(log))
-    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {})
+    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {}, AGENT_ID)
     w.append("siem_query", {"query_string": "x"}, d, extra={"similarity": 0.3038})
 
     assert read_entries(log)[0]["extra"]["similarity"] == 0.3038
@@ -64,7 +66,7 @@ def test_extra_fields_are_attached(tmp_path):
 def test_first_entry_chains_from_genesis(tmp_path):
     log = tmp_path / "audit.jsonl"
     w = AuditWriter(path=str(log))
-    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {})
+    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {}, AGENT_ID)
     w.append("siem_query", {"query_string": "x"}, d)
 
     assert read_entries(log)[0]["prev_hash"] == "0" * 64
@@ -75,7 +77,7 @@ def test_each_entry_links_to_the_previous(tmp_path):
     w = AuditWriter(path=str(log))
     counts = {}
     for _ in range(3):
-        d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, counts)
+        d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, counts, AGENT_ID)
         w.append("siem_query", {"query_string": "x"}, d)
 
     entries = read_entries(log)
@@ -86,7 +88,7 @@ def test_each_entry_links_to_the_previous(tmp_path):
 def test_chain_hash_matches_recomputed_digest(tmp_path):
     log = tmp_path / "audit.jsonl"
     w = AuditWriter(path=str(log))
-    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {})
+    d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, {}, AGENT_ID)
     w.append("siem_query", {"query_string": "x"}, d)
 
     entry = read_entries(log)[0]

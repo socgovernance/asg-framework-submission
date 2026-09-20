@@ -6,13 +6,14 @@ from policy_engine import evaluate, load_manifest
 from verify_chain import verify
 
 MANIFEST = load_manifest("manifest.yaml")
+AGENT_ID = MANIFEST["agent_id"]
 
 
 def write_log(path, n=3):
     w = AuditWriter(path=str(path))
     counts = {}
     for _ in range(n):
-        d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, counts)
+        d = evaluate("siem_query", {"query_string": "x"}, MANIFEST, counts, AGENT_ID)
         w.append("siem_query", {"query_string": "x"}, d)
 
 
