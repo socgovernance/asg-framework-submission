@@ -77,3 +77,40 @@ def test_threshold_direction():
     # longer be flagged up,catches an inverted comparison, which  S6
     # test alone would miss
     assert semantic_scan(S6_THREAT_INTEL, threshold=0.31) is None
+    
+    
+    
+from output_sanitiser import sanitise_output
+
+# output sanitiser
+
+def test_clean_output_passes_through():
+    text = "Alert A-001 from 192.0.2.47, no credentials present."
+    r = sanitise_output(text)
+    assert r["clean"] is True
+    assert r["sanitised_text"] == text
+
+
+def test_aws_key_is_redacted():
+    r = sanitise_output("Found key AKIAIOSFODNN7EXAMPLE in the config.")
+    assert r["clean"] is False
+    assert "AKIAIOSFODNN7EXAMPLE" not in r["sanitised_text"]
+    assert "[REDACTED_AWS_KEY]" in r["sanitised_text"]
+
+
+def test_findings_never_contain_the_secret():
+    r = sanitise_output("Found key AKIAIOSFODNN7EXAMPLE in the config.")
+    assert r["findings"] == [{"label": "AWS_ACCESS_KEY"}]
+
+
+def test_surrounding_text_is_kept():
+    r = sanitise_output("Found key AKIAIOSFODNN7EXAMPLE in the config.")
+    assert "in the config" in r["sanitised_text"]
+
+
+def test_email_is_kept_unless_pii_redaction_requested():
+    text = "Reported by analyst@example.org"
+    assert sanitise_output(text)["sanitised_text"] == text
+    assert "[REDACTED_EMAIL]" in sanitise_output(text, redact_pii=True)["sanitised_text"]
+    
+    
