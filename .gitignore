@@ -5,3 +5,5 @@ __pycache__/
 .DS_Store
 .env
 *.key
+logs_dryrun/
+logs_backup_*/

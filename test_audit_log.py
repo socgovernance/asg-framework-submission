@@ -9,6 +9,7 @@ import hashlib
 
 from audit_log import AuditWriter
 from policy_engine import evaluate, load_manifest
+from audit_log import compute_manifest_hash
 
 MANIFEST = load_manifest("manifest.yaml")
 
@@ -97,4 +98,17 @@ def test_chain_hash_matches_recomputed_digest(tmp_path):
     expected = hashlib.sha256((entry["prev_hash"] + serialised).encode()).hexdigest()
 
     assert entry["chain_hash"] == expected
+    
+
+
+def test_manifest_hash_is_stable():
+    m = load_manifest("manifest.yaml")
+    assert compute_manifest_hash(m) == compute_manifest_hash(m)
+
+
+def test_manifest_hash_changes_when_manifest_changes():
+    m = load_manifest("manifest.yaml")
+    before = compute_manifest_hash(m)
+    m["agent_id"] = "different-agent"
+    assert compute_manifest_hash(m) != before
     

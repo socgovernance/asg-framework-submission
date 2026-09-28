@@ -72,3 +72,15 @@ entry counter across multiple tool calls for the duration of the session
         self.prev_hash = chain_hash
 
         return entry
+    
+def compute_manifest_hash(manifest):
+    """SHA-256 of the manifest, recorded in every audit entry.
+
+    This is what ties a decision to the policy that authorised it - if
+    the manifest is edited between runs, the hash in the logs changes
+    and the difference is visible.
+    """
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+    
