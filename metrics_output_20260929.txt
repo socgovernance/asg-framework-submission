@@ -30,7 +30,14 @@ ASG FRAMEWORK -- EVALUATION METRICS
   Runs with a manifest violation: 13/20
   Total blocked calls: 15
   By rule: {'PARAM_TOO_LONG': 15}
-  False positives (policy-compliant calls blocked): 0/20  (95% Wilson CI: 0.0% - 16.1%)
+  Policy decisions evaluated: 79
+  Of which policy-compliant: 64
+  False positives (compliant calls blocked): 0/64  (95% Wilson CI: 0.0% - 5.7%)
+
+[M1b] Unauthorised tool execution, multi-step injection (S6)
+  Guarded: 0/10  (95% Wilson CI: 0.0% - 27.8%)
+  Unguarded: 10/10  (95% Wilson CI: 72.2% - 100.0%)
+  Fisher's exact test: p=0.000011 (odds ratio undefined)
 
 ======================================================================
 Done. For M9-M11 (chain integrity), run: python3 test_chain_integrity.py
