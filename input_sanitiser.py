@@ -74,10 +74,12 @@ INJECTION_INTENT_LIBRARY = [
 ]
 
 SEMANTIC_THRESHOLD = 0.30
-# The threshold is the midpoint between the highest benign score (0.2847) and 
-# the lowest injection score (0.3162) in a small labelled sample -
-# That sample is too small to establish the threshold with
-# statistical confidence
+# The threshold is the midpoint between the highest benign score (0.2847) and
+# the lowest adversarial score (0.3162).
+# Calibration sample -  3 benign, 4 adversarial, drawn from scenario content &
+# scored as plain text as oppesed to the JSON-wrapped payloads seen at runtime
+# Not held out from the evaluation set. too small to establish the threshold
+# with confidence
 
 _model = None
 _library = None
