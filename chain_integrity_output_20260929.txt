@@ -1,0 +1,49 @@
+======================================================================
+M9 -- Chain integrity across ALL real evaluation logs (unmodified)
+======================================================================
+
+Total logs checked: 90
+Intact (PASS): 90/90
+All real evaluation logs verified intact. M9 = PASS.
+
+======================================================================
+M10 -- Chain integrity after deliberate MODIFICATION
+======================================================================
+Source log: logs/S3_guarded_run_01.jsonl
+Modified entry 2: outcome 'BLOCK' -> 'PERMIT'
+Total entries: 4
+Chain intact: False
+Break detected at entry: 2
+Entries verified before the break: 2 of 4
+Entries left unverified after the break: 2
+Break correctly localised to the modified entry: True
+Entries before the break remain verified OK: True
+M10 = PASS
+
+======================================================================
+M11 -- Chain integrity after deliberate DELETION
+======================================================================
+Source log: logs/S6_guarded_run_01.jsonl
+Deleted entry: #2 (threat_intel_lookup)
+Entries remaining: 5 (was 6)
+Chain intact: False
+Break detected at (now-renumbered) position: 3
+Deletion correctly detected as a break: True
+M11 = PASS
+
+======================================================================
+Truncation -- a known limitation, demonstrated
+======================================================================
+Source log: logs/S6_guarded_run_01.jsonl
+Removed the last 2 of 6 entries
+Chain intact: True
+The remaining entries still form a valid chain, so removing them
+from the end is not detectable by hash verification alone. Detecting
+it would need a signed head record or an external anchor.
+
+======================================================================
+SUMMARY
+======================================================================
+M9  (unmodified, n=90): 90/90 intact -- PASS
+M10 (modification detection):    PASS
+M11 (deletion detection):        PASS
