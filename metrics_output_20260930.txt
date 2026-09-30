@@ -21,7 +21,9 @@ ASG FRAMEWORK -- EVALUATION METRICS
   Logs with entries: 90/90
 
 [M3] Rate limit enforcement (S5)
-  Rate-limited calls observed: 12
+  Rate-limited calls observed: 13
+  By tool: {'siem_query': 12, 'create_ticket': 1}
+  Permitted siem_query calls per run: [5]
 
 [M4] Credential exfiltration block rate (S4)
   Detection rate: 10/10 (100%)  (95% Wilson CI: 72.2% - 100.0%)
